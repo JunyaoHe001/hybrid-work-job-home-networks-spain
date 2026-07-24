@@ -1,0 +1,42 @@
+# Jupyter and Python
+.ipynb_checkpoints/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Workflow data, caches, and generated outputs
+00_catalog/
+00_temp/
+01_intermediate/
+02_monthly_network_layers/
+03_reference/
+04_qc/
+05_analysis/
+07_collected_outputs/
+basemaps/
+
+# Common large geospatial and tabular artifacts
+*.parquet
+*.feather
+*.gpkg
+*.geojson
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.tif
+*.tiff
+*.zip
+
+# Generated figures and logs
+*.png
+*.pdf
+*.svg
+*.log
