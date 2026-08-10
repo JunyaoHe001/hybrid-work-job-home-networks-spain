@@ -1,0 +1,98 @@
+name: Deploy Spain atlas package
+
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - .github/workflows/deploy-atlas-one-time.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-spain-hybrid-work-atlas
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out gh-pages
+        uses: actions/checkout@v6
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Download uploaded atlas package
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/spain_hybrid_work_job_home_atlas.zip"
+          URL="https://drive.usercontent.google.com/download?id=1YgIGkspTKF9CTbd75mZxgRu7mb1Zve1T&export=download&confirm=t"
+          curl --fail --location --retry 5 --retry-delay 2 --retry-all-errors "$URL" --output "$ZIP"
+          echo "566bb25d02ce9fd0da25a95a005dc256373a124f2925e7f84476ab127df375b1  $ZIP" | sha256sum --check --status
+          echo "Package checksum verified."
+
+      - name: Validate and stage atlas
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/spain_hybrid_work_job_home_atlas.zip"
+          STAGE="$RUNNER_TEMP/spain-atlas-stage"
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
+          unzip -q "$ZIP" -d "$STAGE"
+
+          test -f "$STAGE/index.html"
+          test -f "$STAGE/data/meta.json"
+          test -f "$STAGE/data/districts.geojson"
+          test -f "$STAGE/data/district_metrics.json"
+          test -f "$STAGE/vendor/leaflet/leaflet.js"
+          test -f "$STAGE/vendor/leaflet/leaflet.css"
+
+          python - "$STAGE" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          root = pathlib.Path(sys.argv[1])
+          report = json.loads((root / "build" / "build_report.json").read_text(encoding="utf-8"))
+          meta = json.loads((root / "data" / "meta.json").read_text(encoding="utf-8"))
+          assert report.get("status") == "PASS", report
+          assert report.get("atlasNotebookVersion") == "v1_0_2", report
+          assert report.get("edgeCandidatesPerBand") == 50000, report
+          assert report.get("defaultVisibleEdges") == 5000, report
+          assert meta.get("settings", {}).get("edgeCandidatesPerBand") == 50000, meta.get("settings")
+          assert meta.get("settings", {}).get("maxVisibleEdges") == 50000, meta.get("settings")
+          expected = {"1-2", "3-4", "5-7", "8-10", "11-13", "14"}
+          actual = {str(item.get("id")) for item in meta.get("layers", [])}
+          assert actual == expected, (actual, expected)
+          for band in expected:
+              assert (root / "data" / f"edges_{band}.json").is_file(), band
+          print("Atlas package validation PASS")
+          PY
+
+      - name: Install atlas under isolated Pages path
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE="$RUNNER_TEMP/spain-atlas-stage"
+          rm -rf atlas
+          mkdir -p atlas
+          cp -a "$STAGE"/. atlas/
+          touch atlas/.nojekyll
+
+      - name: Commit atlas to gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add atlas
+          if git diff --cached --quiet; then
+            echo "No atlas changes to commit."
+            exit 0
+          fi
+          git commit -m "Deploy Spain hybrid-work interactive atlas"
+          git push origin HEAD:gh-pages
