@@ -1,0 +1,151 @@
+{
+  "status": "PASS",
+  "atlasNotebookVersion": "v1_0_2",
+  "sourceNotebook": "02_Hybrid_Work_Job_Home_Networks_Systematic_Mapping_v4_2_20260724",
+  "sourceMappingRunTag": "v4_2_20260724",
+  "sourceMappingSignature": "ff171b98d27b4349",
+  "createdAt": "2026-08-10T22:33:59.841533+00:00",
+  "siteOutputDir": "E:\\data\\ES_Network\\08_public\\spain_hybrid_work_job_home_atlas",
+  "districts": 3788,
+  "recurrenceBands": [
+    "1-2",
+    "3-4",
+    "5-7",
+    "8-10",
+    "11-13",
+    "14"
+  ],
+  "districtMetrics": [
+    "hybrid_intensity_all_flows",
+    "hybrid_intensity_external",
+    "partner_coverage",
+    "partner_diversity",
+    "mean_external_distance_km",
+    "settlement_urbanity",
+    "onsite_network_position",
+    "marginal_partner_coverage",
+    "marginal_partner_diversity",
+    "marginal_mean_external_distance"
+  ],
+  "geometrySimplifyToleranceM": 250.0,
+  "edgeCandidatesPerBand": 50000,
+  "defaultVisibleEdges": 5000,
+  "leafletVersion": "1.9.4",
+  "runtimeJavaScriptCDNRequired": false,
+  "files": [
+    {
+      "relative_path": "build/district_metric_coverage.csv",
+      "size_bytes": 593,
+      "size": "593.00 B",
+      "sha256": "498759c5ea7259defb1f9b45d3b91ca5bff6335bfda5764acb94264e55293afb"
+    },
+    {
+      "relative_path": "build/edge_candidate_coverage.csv",
+      "size_bytes": 888,
+      "size": "888.00 B",
+      "sha256": "a61ad8827dcf5dd09054d6725345eb275df8a4b015a5ba2c3370306fedd47451"
+    },
+    {
+      "relative_path": "build/source_input_manifest.csv",
+      "size_bytes": 1242,
+      "size": "1.21 KiB",
+      "sha256": "424225e11b1f457b9c4770b002c05e7665fa40cefe78251810427ccbc730d383"
+    },
+    {
+      "relative_path": "data/district_metrics.json",
+      "size_bytes": 669713,
+      "size": "654.02 KiB",
+      "sha256": "45d4653fb7b0249260cf2ec0169bd8e30a1825879bfa591bdac9b61160b0ec48"
+    },
+    {
+      "relative_path": "data/districts.geojson",
+      "size_bytes": 5653801,
+      "size": "5.39 MiB",
+      "sha256": "8e186739e1b35a07480130460b6b58224fb1e661636213fceacd47d8af7e8b3f"
+    },
+    {
+      "relative_path": "data/edges_1-2.json",
+      "size_bytes": 1467297,
+      "size": "1.40 MiB",
+      "sha256": "4285c44c181e27cdc4747519605ba574b950080db661b1bf4771f950fc2a7f75"
+    },
+    {
+      "relative_path": "data/edges_11-13.json",
+      "size_bytes": 1427467,
+      "size": "1.36 MiB",
+      "sha256": "d7581cace57f3bca82e57814f83be36ca020ebb1162af7a887d793066031a5a2"
+    },
+    {
+      "relative_path": "data/edges_14.json",
+      "size_bytes": 1346959,
+      "size": "1.28 MiB",
+      "sha256": "89e157f9069ab9ce7ea2cd794c76b597995ab978abf41c2141e2bf03a5955b0e"
+    },
+    {
+      "relative_path": "data/edges_3-4.json",
+      "size_bytes": 1446929,
+      "size": "1.38 MiB",
+      "sha256": "15500af7f5f6e6507b2bf3c35e56ce5a3b5ccb69c3502697034c3dcd95494a51"
+    },
+    {
+      "relative_path": "data/edges_5-7.json",
+      "size_bytes": 1449068,
+      "size": "1.38 MiB",
+      "sha256": "d6d0e6f0167eda4282ecc1375d413eb03ee2fbdfb2ad2a2c78919e49dd2ebc73"
+    },
+    {
+      "relative_path": "data/edges_8-10.json",
+      "size_bytes": 1452271,
+      "size": "1.38 MiB",
+      "sha256": "241584ef9b8472e447fb888d74133b132fbaa2140f8cb17fb683253bf0182e4b"
+    },
+    {
+      "relative_path": "data/meta.json",
+      "size_bytes": 700623,
+      "size": "684.20 KiB",
+      "sha256": "a2fd02d24212adb8abacbc5f17a5e4ebbb12df9971becb5f19af02377de2a7c9"
+    },
+    {
+      "relative_path": "index.html",
+      "size_bytes": 46520,
+      "size": "45.43 KiB",
+      "sha256": "b27503ad40f5a9de4eef179d8d727d1e96703109c923938e864ec9571577c15c"
+    },
+    {
+      "relative_path": "README_DEPLOY.md",
+      "size_bytes": 1471,
+      "size": "1.44 KiB",
+      "sha256": "c93ae6ed02f7fa8f2811367058659ae22703bb4869f67a728a75a78a749dbcb3"
+    },
+    {
+      "relative_path": "serve_preview.bat",
+      "size_bytes": 71,
+      "size": "71.00 B",
+      "sha256": "3f444a2984f9082a09205898ba4ae2336b8190d2f77c6c49f74b8f803025cc9f"
+    },
+    {
+      "relative_path": "serve_preview.sh",
+      "size_bytes": 107,
+      "size": "107.00 B",
+      "sha256": "ca7a08c0df9a576f00f5621532cbb7ec854cd8fe21133085e9dca6c80fedf908"
+    },
+    {
+      "relative_path": "vendor/leaflet/leaflet.css",
+      "size_bytes": 14806,
+      "size": "14.46 KiB",
+      "sha256": "a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6"
+    },
+    {
+      "relative_path": "vendor/leaflet/leaflet.js",
+      "size_bytes": 147552,
+      "size": "144.09 KiB",
+      "sha256": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a"
+    },
+    {
+      "relative_path": "vendor/leaflet/LICENSE",
+      "size_bytes": 1395,
+      "size": "1.36 KiB",
+      "sha256": "53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb"
+    }
+  ]
+}

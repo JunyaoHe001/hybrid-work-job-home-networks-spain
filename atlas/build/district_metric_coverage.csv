@@ -1,0 +1,11 @@
+﻿metric,valid_rows,district_role_rows,coverage_share
+hybrid_intensity_all_flows,7478,7576,0.987064413938754
+hybrid_intensity_external,7478,7576,0.987064413938754
+partner_coverage,7478,7576,0.987064413938754
+partner_diversity,7478,7576,0.987064413938754
+mean_external_distance_km,7478,7576,0.987064413938754
+settlement_urbanity,7398,7576,0.9765047518479408
+onsite_network_position,7478,7576,0.987064413938754
+marginal_partner_coverage,7398,7576,0.9765047518479408
+marginal_partner_diversity,7398,7576,0.9765047518479408
+marginal_mean_external_distance,7398,7576,0.9765047518479408

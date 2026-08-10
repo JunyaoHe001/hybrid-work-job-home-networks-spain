@@ -1,0 +1,1277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Explore Spain's job–home networks across six workplace-attendance recurrence layers. Directed flows show residential-to-employment connections, while district colours can display hybrid-work intensity, network outcomes, settlement context, and mapped conditional intensity relationships." />
+  <title>Hybrid Work and Job–Home Networks in Spain</title>
+  <link rel="stylesheet" href="./vendor/leaflet/leaflet.css" />
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --ink: #17212b;
+      --muted: #667085;
+      --line: #d9e0e7;
+      --accent: #285f86;
+      --accent-soft: #eaf1f6;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
+      --sidebar-width: 390px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    #app {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #sidebar {
+      position: relative;
+      z-index: 1000;
+      height: 100%;
+      overflow-y: auto;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      box-shadow: 4px 0 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .sidebar-inner { padding: 22px 22px 28px; }
+    .brand { padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    .brand h1 {
+      margin: 0;
+      font-size: 1.36rem;
+      line-height: 1.22;
+      letter-spacing: -0.02em;
+    }
+    .brand .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.90rem;
+      line-height: 1.45;
+    }
+    .brand .description {
+      margin: 12px 0 0;
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .control-section {
+      padding: 17px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 11px;
+    }
+    .section-title h2 {
+      margin: 0;
+      font-size: 0.80rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #344054;
+    }
+    .section-title .value {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.80rem;
+    }
+
+    label {
+      display: block;
+      margin: 0 0 7px;
+      color: #344054;
+      font-size: 0.80rem;
+      font-weight: 650;
+    }
+
+    select, input[type="search"] {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid #cdd5df;
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: #fff;
+      font: inherit;
+      font-size: 0.84rem;
+      outline: none;
+    }
+    select:focus, input:focus {
+      border-color: #7aa7c7;
+      box-shadow: 0 0 0 3px rgba(40, 95, 134, 0.12);
+    }
+
+    .field { margin-top: 12px; }
+    .field:first-child { margin-top: 0; }
+
+    .inline-check {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 12px;
+      font-size: 0.82rem;
+    }
+    .inline-check input { accent-color: var(--accent); }
+    .inline-check label { margin: 0; font-weight: 500; }
+
+    .range-control input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 11px;
+    }
+
+    button {
+      border: 1px solid #cdd5df;
+      border-radius: 8px;
+      background: #fff;
+      color: #344054;
+      padding: 7px 10px;
+      font: inherit;
+      font-size: 0.76rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    button:hover { background: #f8fafc; border-color: #98a2b3; }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+    .stat-card {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fbfcfd;
+    }
+    .stat-card .label {
+      color: var(--muted);
+      font-size: 0.68rem;
+      line-height: 1.25;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .stat-card .number {
+      margin-top: 5px;
+      font-size: 0.95rem;
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .legend-block { margin-top: 14px; }
+    .legend-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 7px;
+      font-size: 0.75rem;
+      font-weight: 650;
+    }
+    .legend-bar {
+      height: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 3px;
+    }
+    .legend-labels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 0.70rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .legend-labels span:last-child { text-align: right; }
+
+    .note {
+      padding: 11px 12px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: #284b63;
+      font-size: 0.74rem;
+      line-height: 1.5;
+    }
+    .coverage {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 0.73rem;
+      line-height: 1.45;
+    }
+
+    .footer {
+      padding-top: 18px;
+      color: var(--muted);
+      font-size: 0.71rem;
+      line-height: 1.55;
+    }
+    .footer a { color: var(--accent); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+    .footer .links { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 8px; }
+
+    #map-wrap { position: relative; min-width: 0; height: 100%; }
+    #map { width: 100%; height: 100%; background: #e9eef2; }
+
+    #map-summary {
+      position: absolute;
+      z-index: 650;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: min(760px, calc(100% - 120px));
+      padding: 9px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.93);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      color: #344054;
+      font-size: 0.78rem;
+      font-weight: 650;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    #loading {
+      position: absolute;
+      inset: 0;
+      z-index: 1200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(245, 247, 250, 0.88);
+      backdrop-filter: blur(3px);
+    }
+    #loading.hidden { display: none; }
+    .loading-card {
+      min-width: 270px;
+      padding: 20px 24px;
+      border-radius: 11px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      text-align: center;
+      font-size: 0.84rem;
+    }
+    .spinner {
+      width: 30px;
+      height: 30px;
+      margin: 0 auto 12px;
+      border: 3px solid #d9e2ea;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #error-box {
+      display: none;
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid #f0b8b5;
+      border-radius: 8px;
+      background: #fff1f0;
+      color: #8a1c17;
+      font-size: 0.76rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .leaflet-tooltip.flow-tooltip,
+    .leaflet-tooltip.node-tooltip {
+      border: 0;
+      border-radius: 8px;
+      box-shadow: 0 5px 18px rgba(15, 23, 42, 0.2);
+      padding: 9px 11px;
+      font-size: 0.75rem;
+      line-height: 1.45;
+    }
+    .tooltip-title { font-weight: 750; margin-bottom: 4px; }
+    .tooltip-grid {
+      display: grid;
+      grid-template-columns: auto auto;
+      column-gap: 13px;
+      row-gap: 2px;
+    }
+    .tooltip-grid span:nth-child(even) {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #mobile-toggle {
+      display: none;
+      position: absolute;
+      z-index: 1300;
+      top: 12px;
+      left: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    @media (max-width: 850px) {
+      #app { display: block; }
+      #sidebar {
+        position: absolute;
+        width: min(var(--sidebar-width), calc(100% - 34px));
+        transform: translateX(-105%);
+        transition: transform 0.22s ease;
+      }
+      #sidebar.open { transform: translateX(0); }
+      #map-wrap { width: 100%; height: 100%; }
+      #mobile-toggle { display: inline-flex; }
+      #map-summary { top: 62px; max-width: calc(100% - 30px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="sidebar-inner">
+        <header class="brand">
+          <h1 id="site-title">Hybrid Work and Job–Home Networks in Spain</h1>
+          <p class="subtitle" id="site-subtitle"></p>
+          <p class="description" id="site-description"></p>
+          <div id="error-box"></div>
+        </header>
+
+        <section class="control-section">
+          <div class="section-title">
+            <h2>Hybrid-work layer</h2>
+            <span class="value" id="intensity-label"></span>
+          </div>
+          <label for="band-select">Workplace attendance recurrence</label>
+          <select id="band-select"></select>
+          <div class="coverage" id="band-help"></div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-title"><h2>District colours</h2></div>
+          <div class="inline-check" style="margin-top: 0; margin-bottom: 14px;">
+            <input id="show-districts" type="checkbox" checked />
+            <label for="show-districts">Show district choropleth</label>
+          </div>
+          <div class="field">
+            <label for="metric-select">District measure</label>
+            <select id="metric-select"></select>
+          </div>
+          <div class="field">
+            <label for="role-select">District role</label>
+            <select id="role-select"></select>
+          </div>
+          <div class="legend-block">
+            <div class="legend-title">
+              <span id="legend-title">District measure</span>
+              <span id="legend-unit"></span>
+            </div>
+            <div class="legend-bar" id="legend-bar"></div>
+            <div class="legend-labels">
+              <span id="legend-min">—</span>
+              <span id="legend-max">—</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-title">
+            <h2>Network display</h2>
+            <span class="value" id="edge-limit-label"></span>
+          </div>
+          <div class="field">
+            <label for="edge-measure-select">Edge values</label>
+            <select id="edge-measure-select">
+              <option value="share">Share of layer flow</option>
+              <option value="raw">Raw flow weight</option>
+            </select>
+          </div>
+          <div class="field range-control">
+            <label for="edge-limit">Maximum visible directed edges</label>
+            <input id="edge-limit" type="range" />
+          </div>
+          <div class="inline-check">
+            <input id="show-edges" type="checkbox" checked />
+            <label for="show-edges">Show OD curves</label>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-title"><h2>Navigate</h2></div>
+          <label for="district-search">Find a mobility district</label>
+          <input id="district-search" type="search" list="district-options" placeholder="District name or code" />
+          <datalist id="district-options"></datalist>
+          <div class="button-row">
+            <button id="fit-mainland" type="button">Mainland</button>
+            <button id="fit-canaries" type="button">Canaries</button>
+            <button id="fit-spain" type="button">All Spain</button>
+            <button id="reset-view" type="button">Reset</button>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-title"><h2>Current selection</h2></div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="label">Exact non-self flow</div><div class="number" id="stat-flow">—</div></div>
+            <div class="stat-card"><div class="label">Visible edges</div><div class="number" id="stat-edges">—</div></div>
+            <div class="stat-card"><div class="label">Candidate coverage</div><div class="number" id="stat-coverage">—</div></div>
+            <div class="stat-card"><div class="label">District values</div><div class="number" id="stat-districts">—</div></div>
+          </div>
+          <div class="coverage" id="coverage-text"></div>
+          <div class="button-row">
+            <button id="download-districts" type="button">Download district values</button>
+            <button id="download-edges" type="button">Download visible edges</button>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <div class="note" id="method-note"></div>
+        </section>
+
+        <footer class="footer">
+          <div id="citation-text"></div>
+          <div id="licence-text"></div>
+          <div id="contact-text"></div>
+          <div class="links" id="public-links"></div>
+        </footer>
+      </div>
+    </aside>
+
+    <main id="map-wrap">
+      <button id="mobile-toggle" class="primary" type="button">Filters</button>
+      <div id="map"></div>
+      <div id="map-summary">Loading data…</div>
+      <div id="loading">
+        <div class="loading-card">
+          <div class="spinner"></div>
+          <div id="loading-text">Loading atlas data…</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="./vendor/leaflet/leaflet.js"></script>
+  <script>
+    "use strict";
+
+    const META_URL = "./data/meta.json";
+    const INITIAL_RETRY_KEY = "spain-hybrid-atlas-initial-retry-v1";
+    const integerFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+    const decimalFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 });
+
+    let meta;
+    let districtGeoJSON;
+    let districtMetricPayload;
+    let map;
+    let districtLayer;
+    let flowLayer;
+    let flowRenderer;
+    let districtLayers = new Map();
+    let districtValueIndex = new Map();
+    let metricColumnIndex = new Map();
+    let edgeCache = new Map();
+    let currentEdgePayload = null;
+    let currentVisibleEdges = [];
+    let currentMetricStats = null;
+    let updateFrame = null;
+
+    const state = {
+      band: null,
+      role: null,
+      metric: null,
+      edgeMeasure: "share",
+      edgeLimit: 500,
+      showEdges: true,
+      showDistricts: true,
+    };
+
+    function byId(id) { return document.getElementById(id); }
+
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function wait(milliseconds) {
+      return new Promise((resolve) => setTimeout(resolve, milliseconds));
+    }
+
+    function setLoading(isLoading, text = "Loading atlas data…") {
+      byId("loading-text").textContent = text;
+      byId("loading").classList.toggle("hidden", !isLoading);
+    }
+
+    function showError(error) {
+      console.error(error);
+      const box = byId("error-box");
+      box.style.display = "block";
+      box.textContent = error?.message || String(error);
+      setLoading(false);
+    }
+
+    async function fetchJSON(url, options = {}) {
+      const attempts = Number(options.attempts ?? 3);
+      const timeoutMs = Number(options.timeoutMs ?? 15000);
+      let lastError = null;
+
+      for (let attempt = 0; attempt < attempts; attempt += 1) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const response = await fetch(url, {
+            cache: attempt === 0 ? "default" : "reload",
+            signal: controller.signal,
+          });
+          if (!response.ok) throw new Error(`Could not load ${url}: HTTP ${response.status}`);
+          return await response.json();
+        } catch (error) {
+          lastError = error;
+          if (attempt + 1 < attempts) {
+            setLoading(true, `Connection interrupted. Retrying ${url.split("/").pop()}…`);
+            await wait(450 * (attempt + 1));
+          }
+        } finally {
+          window.clearTimeout(timeout);
+        }
+      }
+
+      if (lastError?.name === "AbortError") {
+        throw new Error(`Timed out while loading ${url}`);
+      }
+      throw lastError || new Error(`Could not load ${url}`);
+    }
+
+    function getLayerMeta(bandId = state.band) {
+      return meta.layers.find((item) => item.id === bandId);
+    }
+
+    function getMetricMeta(metricId = state.metric) {
+      return meta.districtMetrics.find((item) => item.id === metricId);
+    }
+
+    function getRoleMeta(roleId = state.role) {
+      return meta.roles.find((item) => item.id === roleId);
+    }
+
+    function formatNumber(value, decimals = 2) {
+      if (!Number.isFinite(value)) return "—";
+      return new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: decimals,
+        minimumFractionDigits: 0,
+      }).format(value);
+    }
+
+    function formatMetricValue(value, metric) {
+      if (!Number.isFinite(value)) return "—";
+      const text = formatNumber(value, Number(metric?.decimals ?? 2));
+      return metric?.unit ? `${text} ${metric.unit}` : text;
+    }
+
+    function formatPercent(value) {
+      return Number.isFinite(value) ? `${(100 * value).toFixed(1)}%` : "—";
+    }
+
+    function quantile(values, q) {
+      if (!values.length) return NaN;
+      const sorted = [...values].sort((a, b) => a - b);
+      const position = (sorted.length - 1) * q;
+      const base = Math.floor(position);
+      const remainder = position - base;
+      return sorted[base + 1] !== undefined
+        ? sorted[base] + remainder * (sorted[base + 1] - sorted[base])
+        : sorted[base];
+    }
+
+    function hexToRgb(hex) {
+      const clean = hex.replace("#", "");
+      return [
+        parseInt(clean.slice(0, 2), 16),
+        parseInt(clean.slice(2, 4), 16),
+        parseInt(clean.slice(4, 6), 16),
+      ];
+    }
+
+    function rgbToHex(rgb) {
+      return "#" + rgb.map((value) => Math.round(value).toString(16).padStart(2, "0")).join("");
+    }
+
+    function blendColors(fromHex, toHex, t) {
+      const from = hexToRgb(fromHex);
+      const to = hexToRgb(toHex);
+      const clamped = Math.max(0, Math.min(1, t));
+      return rgbToHex(from.map((value, index) => value + (to[index] - value) * clamped));
+    }
+
+    function paletteColor(palette, t) {
+      if (!palette.length) return meta.settings.neutralDistrictColor;
+      if (palette.length === 1) return palette[0];
+      const scaled = Math.max(0, Math.min(1, t)) * (palette.length - 1);
+      const index = Math.min(palette.length - 2, Math.floor(scaled));
+      return blendColors(palette[index], palette[index + 1], scaled - index);
+    }
+
+    function buildDistrictValueIndex() {
+      districtValueIndex = new Map();
+      metricColumnIndex = new Map();
+      districtMetricPayload.schema.forEach((name, index) => {
+        metricColumnIndex.set(name, index);
+      });
+      for (const row of districtMetricPayload.rows) {
+        districtValueIndex.set(`${row[0]}|${row[1]}`, row);
+      }
+    }
+
+    function effectiveRoleId(metricId, requestedRoleId = state.role) {
+      const metric = getMetricMeta(metricId);
+      if (metric?.roleSpecific === false) return meta.roles[0]?.id ?? requestedRoleId;
+      return requestedRoleId;
+    }
+
+    function metricValue(districtId, roleId, metricId) {
+      const resolvedRoleId = effectiveRoleId(metricId, roleId);
+      const role = meta.roles.find((item) => item.id === resolvedRoleId);
+      const roleNumeric = role?.numericId;
+      const column = metricColumnIndex.get(metricId);
+      if (!Number.isFinite(roleNumeric) || column === undefined) return NaN;
+      const row = districtValueIndex.get(`${districtId}|${roleNumeric}`);
+      if (!row) return NaN;
+      const value = row[column];
+      return value === null || value === undefined ? NaN : Number(value);
+    }
+
+    function calculateMetricStats() {
+      const metric = getMetricMeta();
+      if (!metric) return null;
+      const values = meta.districts
+        .map((district) => metricValue(district.id, state.role, metric.id))
+        .filter(Number.isFinite);
+
+      if (!values.length) return { metric, values, min: NaN, max: NaN, cap: NaN };
+
+      if (metric.palette === "diverging") {
+        const absolute = values.map(Math.abs);
+        const cap = quantile(absolute, meta.settings.divergingAbsQuantile) || Math.max(...absolute) || 1;
+        return { metric, values, min: -cap, max: cap, cap };
+      }
+
+      const min = quantile(values, meta.settings.sequentialLowerQuantile);
+      const max = quantile(values, meta.settings.sequentialUpperQuantile);
+      return {
+        metric,
+        values,
+        min: Number.isFinite(min) ? min : Math.min(...values),
+        max: Number.isFinite(max) && max > min ? max : Math.max(...values),
+        cap: NaN,
+      };
+    }
+
+    function metricColor(value) {
+      if (!currentMetricStats || !Number.isFinite(value)) return meta.settings.neutralDistrictColor;
+      const stats = currentMetricStats;
+      if (stats.metric.palette === "diverging") {
+        const cap = stats.cap || 1;
+        if (value < 0) {
+          return blendColors(
+            meta.settings.zeroColor,
+            meta.settings.negativeColor,
+            Math.min(1, Math.abs(value) / cap)
+          );
+        }
+        if (value > 0) {
+          return blendColors(
+            meta.settings.zeroColor,
+            meta.settings.positiveColor,
+            Math.min(1, value / cap)
+          );
+        }
+        return meta.settings.zeroColor;
+      }
+
+      const denominator = stats.max - stats.min || 1;
+      const t = (value - stats.min) / denominator;
+      return paletteColor(meta.settings.sequentialPalette, t);
+    }
+
+    function districtTooltip(feature) {
+      const district = meta.districts[Number(feature.properties.i)];
+      const metric = getMetricMeta();
+      const value = metric ? metricValue(district.id, state.role, metric.id) : NaN;
+      const resolvedRoleId = effectiveRoleId(metric?.id, state.role);
+      const role = meta.roles.find((item) => item.id === resolvedRoleId);
+      const roleLabel = metric?.roleSpecific === false ? "Not role-specific" : (role?.label ?? state.role);
+      return `
+        <div class="tooltip-title">${escapeHTML(district.name)}</div>
+        <div class="tooltip-grid">
+          <span>District code</span><span>${escapeHTML(district.code)}</span>
+          <span>Province code</span><span>${escapeHTML(district.province ?? "—")}</span>
+          <span>Role</span><span>${escapeHTML(roleLabel)}</span>
+          <span>${escapeHTML(metric?.label ?? "Measure")}</span>
+          <span>${escapeHTML(formatMetricValue(value, metric))}</span>
+        </div>
+      `;
+    }
+
+    function buildMap() {
+      map = L.map("map", { zoomControl: true, preferCanvas: false, minZoom: 3 });
+      L.tileLayer(meta.map.tileUrl, {
+        attribution: meta.map.attribution,
+        maxZoom: meta.map.maxZoom,
+      }).addTo(map);
+
+      map.createPane("districtPane");
+      map.getPane("districtPane").style.zIndex = 410;
+      map.createPane("flowPane");
+      map.getPane("flowPane").style.zIndex = 460;
+      map.getPane("flowPane").style.pointerEvents = "auto";
+
+      districtLayer = L.geoJSON(districtGeoJSON, {
+        pane: "districtPane",
+        style: {
+          color: "#ffffff",
+          weight: 0.45,
+          fillColor: meta.settings.neutralDistrictColor,
+          fillOpacity: 0.80,
+        },
+        onEachFeature: (feature, layer) => {
+          districtLayers.set(Number(feature.properties.i), layer);
+          layer.bindTooltip("", { sticky: true, className: "node-tooltip" });
+          layer.on("mouseover", () => {
+            if (state.showDistricts) {
+              layer.setStyle({ weight: 1.4, color: "#344054", opacity: 1 });
+            }
+            layer.setTooltipContent(districtTooltip(feature));
+          });
+          layer.on("mouseout", () => {
+            if (state.showDistricts) {
+              layer.setStyle({ weight: 0.45, color: "#ffffff", opacity: 1 });
+            } else {
+              layer.setStyle({ weight: 0, opacity: 0, fillOpacity: 0 });
+            }
+          });
+        },
+      }).addTo(map);
+
+      flowRenderer = L.svg({ pane: "flowPane", padding: 0.75 }).addTo(map);
+      flowLayer = L.layerGroup().addTo(map);
+      ensureArrowMarker();
+      fitBounds(meta.bounds.mainland || meta.bounds.all);
+    }
+
+    function ensureArrowMarker() {
+      const svg = flowRenderer?._container;
+      if (!svg || svg.querySelector("#flow-arrow")) return;
+      const ns = "http://www.w3.org/2000/svg";
+      const defs = document.createElementNS(ns, "defs");
+      const marker = document.createElementNS(ns, "marker");
+      marker.setAttribute("id", "flow-arrow");
+      marker.setAttribute("viewBox", "0 0 10 10");
+      marker.setAttribute("refX", "9");
+      marker.setAttribute("refY", "5");
+      marker.setAttribute("markerWidth", "6");
+      marker.setAttribute("markerHeight", "6");
+      marker.setAttribute("orient", "auto-start-reverse");
+      marker.setAttribute("markerUnits", "userSpaceOnUse");
+      const path = document.createElementNS(ns, "path");
+      path.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
+      path.setAttribute("fill", meta.settings.flowColor);
+      marker.appendChild(path);
+      defs.appendChild(marker);
+      svg.insertBefore(defs, svg.firstChild);
+    }
+
+    function quadraticCurve(origin, destination, segments = 12, curvature = 0.12) {
+      const x1 = origin.lng;
+      const y1 = origin.lat;
+      const x2 = destination.lng;
+      const y2 = destination.lat;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const cx = (x1 + x2) / 2 - dy * curvature;
+      const cy = (y1 + y2) / 2 + dx * curvature;
+      const points = [];
+      for (let step = 0; step <= segments; step += 1) {
+        const t = step / segments;
+        const mt = 1 - t;
+        const x = mt * mt * x1 + 2 * mt * t * cx + t * t * x2;
+        const y = mt * mt * y1 + 2 * mt * t * cy + t * t * y2;
+        points.push([y, x]);
+      }
+      return points;
+    }
+
+    function fitBounds(bounds) {
+      if (bounds) map.fitBounds(bounds, { padding: [22, 22] });
+    }
+
+    function buildControls() {
+      byId("site-title").textContent = meta.title;
+      byId("site-subtitle").textContent = meta.subtitle;
+      byId("site-description").textContent = meta.description;
+      byId("method-note").textContent = meta.methodNote;
+      byId("citation-text").innerHTML = `<strong>Citation:</strong> ${escapeHTML(meta.public.citation)}`;
+      byId("licence-text").innerHTML = `<strong>Licence:</strong> ${escapeHTML(meta.public.licence)}`;
+      byId("contact-text").innerHTML = meta.public.contactEmail
+        ? `<strong>Contact:</strong> <a href="mailto:${escapeHTML(meta.public.contactEmail)}">${escapeHTML(meta.public.contactEmail)}</a>`
+        : "";
+
+      const links = [
+        [meta.public.methodsUrl, "Methods"],
+        [meta.public.dataDownloadUrl, "Full data"],
+        [meta.public.repositoryUrl, "Repository"],
+      ].filter(([url]) => Boolean(url));
+      byId("public-links").innerHTML = links
+        .map(([url, label]) => `<a href="${escapeHTML(url)}" target="_blank" rel="noopener">${label}</a>`)
+        .join("");
+
+      const bandSelect = byId("band-select");
+      bandSelect.innerHTML = meta.layers.map((layer) => {
+        const intensity = Number.isFinite(layer.hybridWorkIntensity)
+          ? ` · intensity ${layer.hybridWorkIntensity.toFixed(2)}`
+          : "";
+        return `<option value="${escapeHTML(layer.id)}">${escapeHTML(layer.label + intensity)}</option>`;
+      }).join("");
+      bandSelect.value = state.band;
+
+      const metricSelect = byId("metric-select");
+      const categories = [...new Set(meta.districtMetrics.map((metric) => metric.category))];
+      metricSelect.innerHTML = categories.map((category) => {
+        const options = meta.districtMetrics
+          .filter((metric) => metric.category === category)
+          .map((metric) => `<option value="${escapeHTML(metric.id)}">${escapeHTML(metric.label)}</option>`)
+          .join("");
+        return `<optgroup label="${escapeHTML(category)}">${options}</optgroup>`;
+      }).join("");
+      metricSelect.value = state.metric;
+
+      const roleSelect = byId("role-select");
+      roleSelect.innerHTML = meta.roles
+        .map((role) => `<option value="${escapeHTML(role.id)}">${escapeHTML(role.label)}</option>`)
+        .join("");
+      roleSelect.value = state.role;
+
+      const edgeLimit = byId("edge-limit");
+      edgeLimit.min = Math.min(meta.settings.edgeLimitStep, meta.settings.maxVisibleEdges);
+      edgeLimit.max = meta.settings.maxVisibleEdges;
+      edgeLimit.step = meta.settings.edgeLimitStep;
+      edgeLimit.value = state.edgeLimit;
+      byId("edge-limit-label").textContent = integerFormat.format(state.edgeLimit);
+      byId("edge-measure-select").value = state.edgeMeasure;
+      byId("show-districts").checked = state.showDistricts;
+
+      const options = byId("district-options");
+      options.innerHTML = meta.districts
+        .map((district) => `<option value="${escapeHTML(district.name)} — ${escapeHTML(district.code)}"></option>`)
+        .join("");
+
+      bandSelect.addEventListener("change", async (event) => {
+        state.band = event.target.value;
+        await loadBand(state.band);
+        scheduleUpdate();
+      });
+      metricSelect.addEventListener("change", (event) => {
+        state.metric = event.target.value;
+        syncRoleControl();
+        scheduleUpdate();
+      });
+      roleSelect.addEventListener("change", (event) => {
+        state.role = event.target.value;
+        scheduleUpdate();
+      });
+      byId("edge-measure-select").addEventListener("change", (event) => {
+        state.edgeMeasure = event.target.value;
+        scheduleUpdate();
+      });
+      edgeLimit.addEventListener("input", () => {
+        byId("edge-limit-label").textContent = integerFormat.format(Number(edgeLimit.value));
+      });
+      edgeLimit.addEventListener("change", () => {
+        state.edgeLimit = Number(edgeLimit.value);
+        scheduleUpdate();
+      });
+      byId("show-edges").addEventListener("change", (event) => {
+        state.showEdges = event.target.checked;
+        scheduleUpdate();
+      });
+      byId("show-districts").addEventListener("change", (event) => {
+        state.showDistricts = event.target.checked;
+        scheduleUpdate();
+      });
+      byId("fit-mainland").addEventListener("click", () => fitBounds(meta.bounds.mainland));
+      byId("fit-canaries").addEventListener("click", () => fitBounds(meta.bounds.canaries));
+      byId("fit-spain").addEventListener("click", () => fitBounds(meta.bounds.all));
+      byId("reset-view").addEventListener("click", resetView);
+      byId("district-search").addEventListener("change", searchDistrict);
+      byId("download-districts").addEventListener("click", downloadDistrictValues);
+      byId("download-edges").addEventListener("click", downloadVisibleEdges);
+      byId("mobile-toggle").addEventListener("click", () => byId("sidebar").classList.toggle("open"));
+
+      syncRoleControl();
+      updateBandText();
+    }
+
+    function syncRoleControl() {
+      const metric = getMetricMeta();
+      const roleSelect = byId("role-select");
+      roleSelect.disabled = metric ? metric.roleSpecific === false : false;
+      if (metric?.roleSpecific === false) {
+        roleSelect.title = "This district attribute is not role-specific.";
+      } else {
+        roleSelect.title = "";
+      }
+    }
+
+    function updateBandText() {
+      const layer = getLayerMeta();
+      if (!layer) return;
+      const intensity = Number.isFinite(layer.hybridWorkIntensity)
+        ? layer.hybridWorkIntensity.toFixed(2)
+        : "—";
+      byId("intensity-label").textContent = `Intensity ${intensity}`;
+      byId("band-help").textContent =
+        `${layer.shortLabel} in the 14-day active window. Higher hybrid-work intensity corresponds to fewer workplace-attendance days.`;
+    }
+
+    async function loadBand(bandId) {
+      if (!edgeCache.has(bandId)) {
+        const layer = getLayerMeta(bandId);
+        setLoading(true, `Loading ${layer?.shortLabel ?? bandId} network layer…`);
+        const payload = await fetchJSON(`./${layer.edgeFile}`);
+        edgeCache.set(bandId, payload);
+      }
+      currentEdgePayload = edgeCache.get(bandId);
+      updateBandText();
+      setLoading(false);
+    }
+
+    function updateDistricts() {
+      currentMetricStats = calculateMetricStats();
+      const metric = getMetricMeta();
+
+      districtLayers.forEach((layer, districtId) => {
+        const value = metric ? metricValue(districtId, state.role, metric.id) : NaN;
+        if (state.showDistricts) {
+          layer.setStyle({
+            color: "#ffffff",
+            weight: 0.45,
+            opacity: 1,
+            fillColor: metricColor(value),
+            fillOpacity: Number.isFinite(value) ? 0.84 : 0.45,
+          });
+        } else {
+          layer.setStyle({
+            weight: 0,
+            opacity: 0,
+            fillOpacity: 0,
+          });
+        }
+        layer.setTooltipContent(districtTooltip(layer.feature));
+      });
+
+      const legendBlock = byId("legend-bar")?.closest(".legend-block");
+      if (legendBlock) {
+        legendBlock.style.display = state.showDistricts ? "" : "none";
+      }
+      updateLegend();
+    }
+
+    function updateLegend() {
+      const metric = getMetricMeta();
+      const stats = currentMetricStats;
+      byId("legend-title").textContent = metric?.label ?? "District measure";
+      byId("legend-unit").textContent = metric?.unit ?? "";
+
+      if (!metric || !stats || !stats.values.length) {
+        byId("legend-bar").style.background = meta.settings.neutralDistrictColor;
+        byId("legend-min").textContent = "—";
+        byId("legend-max").textContent = "—";
+        return;
+      }
+
+      if (metric.palette === "diverging") {
+        byId("legend-bar").style.background =
+          `linear-gradient(90deg, ${meta.settings.negativeColor}, ${meta.settings.zeroColor}, ${meta.settings.positiveColor})`;
+      } else {
+        byId("legend-bar").style.background =
+          `linear-gradient(90deg, ${meta.settings.sequentialPalette.join(",")})`;
+      }
+      byId("legend-min").textContent = formatMetricValue(stats.min, metric);
+      byId("legend-max").textContent = formatMetricValue(stats.max, metric);
+    }
+
+    function updateFlows() {
+      flowLayer.clearLayers();
+      currentVisibleEdges = [];
+      if (!state.showEdges || !currentEdgePayload) return;
+
+      const valueIndex = state.edgeMeasure === "raw" ? 2 : 3;
+      const sorted = [...currentEdgePayload.rows].sort(
+        (left, right) => Number(right[valueIndex] ?? 0) - Number(left[valueIndex] ?? 0)
+      );
+      const selected = sorted.slice(0, state.edgeLimit);
+      currentVisibleEdges = selected;
+
+      const maxShare = Math.max(
+        ...selected.map((row) => Number(row[3]) || 0),
+        1e-12
+      );
+
+      for (const row of selected) {
+        const origin = meta.districts[Number(row[0])];
+        const destination = meta.districts[Number(row[1])];
+        if (!origin || !destination) continue;
+
+        const share = Number(row[3]) || 0;
+        const scaled = Math.sqrt(Math.max(0, share) / maxShare);
+        const line = L.polyline(
+          quadraticCurve(origin, destination),
+          {
+            renderer: flowRenderer,
+            pane: "flowPane",
+            color: meta.settings.flowColor,
+            weight: 0.35 + 2.8 * scaled,
+            opacity: 0.12 + 0.48 * scaled,
+            interactive: true,
+          }
+        );
+        line.bindTooltip(
+          `<div class="tooltip-title">${escapeHTML(origin.name)} → ${escapeHTML(destination.name)}</div>
+           <div class="tooltip-grid">
+             <span>Layer</span><span>${escapeHTML(getLayerMeta()?.shortLabel ?? state.band)}</span>
+             <span>Raw flow</span><span>${escapeHTML(formatNumber(Number(row[2]), 1))}</span>
+             <span>Layer share</span><span>${escapeHTML(formatPercent(Number(row[3])))}</span>
+           </div>`,
+          { sticky: true, className: "flow-tooltip" }
+        );
+        line.addTo(flowLayer);
+        const element = line.getElement();
+        if (element) element.setAttribute("marker-end", "url(#flow-arrow)");
+      }
+
+      ensureArrowMarker();
+    }
+
+    function updateSummary() {
+      const metric = getMetricMeta();
+      const resolvedRoleId = effectiveRoleId(metric?.id, state.role);
+      const role = meta.roles.find((item) => item.id === resolvedRoleId);
+      const roleLabel = metric?.roleSpecific === false ? "not role-specific" : (role?.label ?? state.role);
+      const layer = getLayerMeta();
+      const totals = currentEdgePayload?.totals || {};
+      const fullFlow = Number(totals.fullNonselfWeight);
+      const candidateCoverage = Number(totals.retainedMassShare);
+      const displayedWeight = currentVisibleEdges.reduce(
+        (sum, row) => sum + (Number(row[2]) || 0),
+        0
+      );
+      const displayedCoverage = fullFlow > 0 ? displayedWeight / fullFlow : NaN;
+      const validDistricts = meta.districts.filter((district) =>
+        Number.isFinite(metricValue(district.id, state.role, metric?.id))
+      ).length;
+
+      byId("stat-flow").textContent = Number.isFinite(fullFlow)
+        ? integerFormat.format(fullFlow)
+        : "—";
+      byId("stat-edges").textContent = integerFormat.format(currentVisibleEdges.length);
+      byId("stat-coverage").textContent = formatPercent(candidateCoverage);
+      byId("stat-districts").textContent = `${integerFormat.format(validDistricts)}/${integerFormat.format(meta.districts.length)}`;
+      byId("coverage-text").textContent =
+        `Retained candidate edges cover ${formatPercent(candidateCoverage)} of exact non-self layer flow; ` +
+        `the currently visible edges cover ${formatPercent(displayedCoverage)}. ` +
+        `District values are not edge-sampled.`;
+      const districtDisplayLabel = state.showDistricts
+        ? `${roleLabel} · ${metric?.label ?? state.metric}`
+        : "district choropleth hidden";
+      byId("map-summary").textContent =
+        `${layer?.shortLabel ?? state.band} · hybrid-work intensity ${Number.isFinite(layer?.hybridWorkIntensity) ? layer.hybridWorkIntensity.toFixed(2) : "—"} · ` +
+        districtDisplayLabel;
+    }
+
+    function scheduleUpdate() {
+      if (!meta || !currentEdgePayload || !districtMetricPayload) return;
+      if (updateFrame !== null) cancelAnimationFrame(updateFrame);
+      updateFrame = requestAnimationFrame(() => {
+        updateFrame = null;
+        updateDistricts();
+        updateFlows();
+        updateSummary();
+      });
+    }
+
+    function resetView() {
+      state.band = meta.defaultBand;
+      state.role = meta.defaultRole;
+      state.metric = meta.defaultDistrictMetric;
+      state.edgeMeasure = meta.defaultEdgeMeasure;
+      state.edgeLimit = meta.settings.defaultVisibleEdges;
+      state.showEdges = true;
+      state.showDistricts = true;
+
+      byId("band-select").value = state.band;
+      byId("role-select").value = state.role;
+      byId("metric-select").value = state.metric;
+      byId("edge-measure-select").value = state.edgeMeasure;
+      byId("edge-limit").value = state.edgeLimit;
+      byId("edge-limit-label").textContent = integerFormat.format(state.edgeLimit);
+      byId("show-edges").checked = true;
+      byId("show-districts").checked = true;
+      syncRoleControl();
+      fitBounds(meta.bounds.mainland || meta.bounds.all);
+      loadBand(state.band).then(scheduleUpdate).catch(showError);
+    }
+
+    function searchDistrict(event) {
+      const query = event.target.value.trim().toLowerCase();
+      if (!query) return;
+      const district = meta.districts.find((item) =>
+        `${item.name} — ${item.code}`.toLowerCase() === query ||
+        item.name.toLowerCase() === query ||
+        item.code.toLowerCase() === query
+      );
+      if (!district) return;
+
+      const layer = districtLayers.get(Number(district.id));
+      if (layer) {
+        map.fitBounds(layer.getBounds(), { maxZoom: 11, padding: [45, 45] });
+        layer.openTooltip();
+      } else {
+        map.setView([district.lat, district.lng], 10);
+      }
+      if (window.innerWidth <= 850) byId("sidebar").classList.remove("open");
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+    }
+
+    function downloadTextFile(filename, text) {
+      const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadDistrictValues() {
+      const metric = getMetricMeta();
+      const resolvedRoleId = effectiveRoleId(metric?.id, state.role);
+      const role = meta.roles.find((item) => item.id === resolvedRoleId);
+      const roleLabel = metric?.roleSpecific === false ? "Not role-specific" : (role?.label ?? state.role);
+      const rows = [["district_code", "district_name", "province_code", "role", "metric", "value"]];
+      for (const district of meta.districts) {
+        rows.push([
+          district.code,
+          district.name,
+          district.province ?? "",
+          roleLabel,
+          metric?.label ?? state.metric,
+          metricValue(district.id, resolvedRoleId, metric?.id),
+        ]);
+      }
+      const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
+      downloadTextFile(
+        `district_${state.metric}_${metric?.roleSpecific === false ? "all" : state.role}_${state.band}.csv`,
+        csv
+      );
+    }
+
+    function downloadVisibleEdges() {
+      const rows = [["origin_code", "origin_name", "destination_code", "destination_name", "recurrence_band", "raw_flow", "layer_flow_share"]];
+      for (const row of currentVisibleEdges) {
+        const origin = meta.districts[Number(row[0])];
+        const destination = meta.districts[Number(row[1])];
+        rows.push([
+          origin?.code ?? "",
+          origin?.name ?? "",
+          destination?.code ?? "",
+          destination?.name ?? "",
+          state.band,
+          row[2],
+          row[3],
+        ]);
+      }
+      const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
+      downloadTextFile(`visible_job_home_edges_${state.band}.csv`, csv);
+    }
+
+    async function initialise() {
+      if (typeof L === "undefined") {
+        throw new Error("The local Leaflet interface library did not load correctly.");
+      }
+
+      setLoading(true, "Loading atlas metadata…");
+      meta = await fetchJSON(META_URL);
+
+      state.band = meta.defaultBand;
+      state.role = meta.defaultRole;
+      state.metric = meta.defaultDistrictMetric;
+      state.edgeMeasure = meta.defaultEdgeMeasure;
+      state.edgeLimit = meta.settings.defaultVisibleEdges;
+
+      const defaultLayer = getLayerMeta(state.band);
+      setLoading(true, `Loading map, district measures, and ${defaultLayer.shortLabel} network…`);
+
+      const [geojson, metrics, edges] = await Promise.all([
+        fetchJSON(`./${meta.districtGeoJSON}`),
+        fetchJSON(`./${meta.districtMetricFile}`),
+        fetchJSON(`./${defaultLayer.edgeFile}`),
+      ]);
+
+      districtGeoJSON = geojson;
+      districtMetricPayload = metrics;
+      edgeCache.set(state.band, edges);
+      currentEdgePayload = edges;
+
+      buildDistrictValueIndex();
+      buildMap();
+      buildControls();
+      scheduleUpdate();
+      setLoading(false);
+      sessionStorage.removeItem(INITIAL_RETRY_KEY);
+    }
+
+    async function startAtlas() {
+      try {
+        await initialise();
+      } catch (error) {
+        const alreadyRetried = sessionStorage.getItem(INITIAL_RETRY_KEY) === "1";
+        if (!alreadyRetried) {
+          sessionStorage.setItem(INITIAL_RETRY_KEY, "1");
+          setLoading(true, "Initial connection was interrupted. Retrying automatically…");
+          await wait(650);
+          const retryUrl = new URL(window.location.href);
+          retryUrl.searchParams.set("atlas_retry", Date.now().toString());
+          window.location.replace(retryUrl.toString());
+          return;
+        }
+        sessionStorage.removeItem(INITIAL_RETRY_KEY);
+        showError(error);
+      }
+    }
+
+    startAtlas();
+  </script>
+</body>
+</html>
