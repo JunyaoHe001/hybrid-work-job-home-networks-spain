@@ -40,3 +40,6 @@ basemaps/
 *.pdf
 *.svg
 *.log
+
+# Public interactive atlas asset
+!atlas/data/districts.geojson
